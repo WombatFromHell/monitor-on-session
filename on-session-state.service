@@ -1,0 +1,13 @@
+[Unit]
+Description=Provide Lock/Unlock Script Event Functionality for KDE Plasma 6
+Wants=display-manager.service
+After=display-manager.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/monitor-dbus-session-state.sh
+ExecStop=/usr/bin/pkill -9 monitor-dbus-session-state.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=graphical-session.target
