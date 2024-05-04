@@ -1,13 +1,37 @@
 #!/usr/bin/env bash
-# Path to the script to run when the signal is received
-SCRIPT_PATH="${@:-$HOME/.local/bin/on-session.sh}"
+
+lock_scripts=()
+unlock_scripts=("$HOME/.local/bin/fix-gsync.sh")
+
+run_scripts() {
+	for script in "${@}"; do
+		"$script"
+		exit_code=$?
+		if [ "$exit_code" -ne 0 ]; then
+			echo "Error: $script exited with code $exit_code"
+		fi
+	done
+}
 
 handle_signal() {
 	echo "Screen saver active state changed to: $1"
-	echo "Running: $SCRIPT_PATH $1"
-	$SCRIPT_PATH $1
+
+	if [ "$1" == "true" ]; then
+		#
+		# this runs when the session goes into a locked state
+		#
+		echo "Running lock state scripts..."
+		run_scripts "${lock_scripts[@]}"
+	elif [ "$1" == "false" ]; then
+		#
+		# these things run when the session goes into an unlocked state
+		#
+		echo "Running unlock state scripts..."
+		run_scripts "${unlock_scripts[@]}"
+	fi
 }
 
+prev_state=""
 dbus-monitor --session "type='signal',interface='org.freedesktop.ScreenSaver'" | (
 	while true; do
 		read -r line
