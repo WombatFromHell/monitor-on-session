@@ -15,7 +15,7 @@ if ! command -v nvidia-settings &>/dev/null; then
 fi
 VRR_ENABLED=$(nvidia-settings -q AllowVRR | awk -F':' '/Attribute/ {print $3}' | sed 's/^ //;s/\.//g')
 
-if [ "$XDG_SESSION_TYPE" = "x11" ] && ! [[ "$DESKTOP_SESSION" = *gnome* ]] && [ "$VRR_ENABLED" -eq 1 ] && [ "$CURRENT_PRIMARY" = "$OUTPUT" ]; then
+if [ "$XDG_SESSION_TYPE" = "x11" ] && [ "$VRR_ENABLED" -eq 1 ] && [ "$CURRENT_PRIMARY" = "$OUTPUT" ]; then
   "$XRANDR" --output "$OUTPUT" -r 120 --mode 2560x1440
   sleep 1
   "$XRANDR" --output "$OUTPUT" -r 144 --mode 2560x1440
