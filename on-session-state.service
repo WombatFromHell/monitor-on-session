@@ -1,7 +1,8 @@
 [Unit]
 Description=Provide Lock/Unlock Script Event Functionality for KDE Plasma 6
-Wants=display-manager.service
-After=display-manager.service
+After=graphical-session.target
+PartOf=graphical-session.target
+Requires=graphical-session.target
 
 [Service]
 Type=simple

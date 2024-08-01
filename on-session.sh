@@ -6,6 +6,6 @@ if [ "$1" == "true" ]; then
 elif [ "$1" == "false" ]; then
   # do a refresh rate toggle to fix gsync on Nvidia cards
   # ... at least until the next Monitor Suspend/Power event
-  "$HOME"/.local/bin/fix-gsync.sh
+  sleep 2 && "$HOME"/.local/bin/fix-gsync.sh
   "$HOME"/.local/bin/openrgb-load.sh
 fi
