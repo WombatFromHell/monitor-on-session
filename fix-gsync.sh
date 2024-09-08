@@ -1,33 +1,60 @@
 #!/usr/bin/env bash
 
-OUTPUT="DP-4"
+X11_OUTPUT="DP-4"
+WAYLAND_OUTPUT="DP-3"
 XRANDR=$(command -v xrandr)
+KSD=$(command -v kscreen-doctor)
 
-get_current_primary_monitor() {
+get_current_primary_monitor_x11() {
   SELECTED=$(xrandr | grep " connected primary " | awk '{print $1}')
   echo "$SELECTED"
 }
-CURRENT_PRIMARY=$(get_current_primary_monitor)
+CURRENT_PRIMARY_X11=$(get_current_primary_monitor_x11)
+CURRENT_PRIMARY=$(kscreen-id.py --current)
 
 if ! command -v nvidia-settings &>/dev/null; then
   echo "ERROR: nvidia-settings not found in PATH, aborting!"
   exit 1
 fi
-VRR_ENABLED=$(nvidia-settings -q AllowVRR | awk -F':' '/Attribute/ {print $3}' | sed 's/^ //;s/\.//g')
 
-if [ "$XDG_SESSION_TYPE" = "x11" ] && [ "$VRR_ENABLED" -eq 1 ] && [ "$CURRENT_PRIMARY" = "$OUTPUT" ]; then
-  "$XRANDR" --output "$OUTPUT" -r 120 --mode 2560x1440
-  sleep 1
-  "$XRANDR" --output "$OUTPUT" -r 144 --mode 2560x1440
-  "$@"
-elif ! [ "$XDG_SESSION_TYPE" = "x11" ]; then
-  echo "Warning: not running in X11 session! XRANDR will not work!"
-  exit 1
-elif [ "$VRR_ENABLED" -eq 0 ]; then
-  echo "Warning: VRR is not enabled, aborting!"
-  exit 1
-elif ! [ "$CURRENT_PRIMARY" = "$OUTPUT" ]; then
-  echo "Warning: the current primary monitor is not $OUTPUT!"
+if [ "$XDG_SESSION_TYPE" = "x11" ]; then
+  VRR_ENABLED_X11=$(nvidia-settings -q AllowVRR | awk -F':' '/Attribute/ {print $3}' | sed 's/^ //;s/\.//g')
+  if [ "$VRR_ENABLED_X11" -eq 1 ] && [ "$CURRENT_PRIMARY_X11" = "$X11_OUTPUT" ]; then
+    "$XRANDR" --output "$X11_OUTPUT" -r 60 --mode 2560x1440
+    sleep 1
+    "$XRANDR" --output "$X11_OUTPUT" -r 144 --mode 2560x1440
+    "$@"
+  elif ! [ "$CURRENT_PRIMARY_X11" = "$X11_OUTPUT" ]; then
+    echo "Warning: the current primary monitor does not match our defined output!"
+    exit 1
+  elif ! [ "$VRR_ENABLED_X11" -eq 1 ]; then
+    echo "Warning: VRR is not enabled, aborting!"
+    exit 1
+  else
+    echo "Error: an unknown error occurred when attempting to detect active output!"
+    exit 1
+  fi
+elif [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+  VRR_ENABLED=$(kscreen-id.py --vrr | cut -d' ' -f2)
+  if [ "$VRR_ENABLED" = "True" ] && [ "$CURRENT_PRIMARY" = "$WAYLAND_OUTPUT" ]; then
+    targetm1_mode=$(kscreen-id.py --mid "$WAYLAND_OUTPUT" 2560x1440@120)
+    targetm0_mode=$(kscreen-id.py --mid "$WAYLAND_OUTPUT" 2560x1440@144)
+    "$KSD" output."$WAYLAND_OUTPUT".mode."$targetm1_mode" # switch to 120hz
+    sleep 1
+    "$KSD" output."$WAYLAND_OUTPUT".mode."$targetm0_mode" # switch back to 144hz
+    "$@"
+  elif ! [ "$CURRENT_PRIMARY" = "$WAYLAND_OUTPUT" ]; then
+    echo "Warning: the current primary monitor does not match our defined output!"
+    exit 1
+  elif ! [ "$VRR_ENABLED" = "True" ]; then
+    echo "Warning: VRR is not enabled, aborting!"
+    exit 1
+  else
+    echo "Error: an unknown error occurred when attempting to detect active output!"
+    exit 1
+  fi
+else
+  echo "Error: an unknown session type was detected!"
   exit 1
 fi
 
