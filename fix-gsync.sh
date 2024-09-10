@@ -4,13 +4,14 @@ X11_OUTPUT="DP-4"
 WAYLAND_OUTPUT="DP-3"
 XRANDR=$(command -v xrandr)
 KSD=$(command -v kscreen-doctor)
+KSID=$(command -v kscreen-id.py)
 
 get_current_primary_monitor_x11() {
   SELECTED=$(xrandr | grep " connected primary " | awk '{print $1}')
   echo "$SELECTED"
 }
 CURRENT_PRIMARY_X11=$(get_current_primary_monitor_x11)
-CURRENT_PRIMARY=$(kscreen-id.py --current)
+CURRENT_PRIMARY=$("$KSID" --current)
 
 if ! command -v nvidia-settings &>/dev/null; then
   echo "ERROR: nvidia-settings not found in PATH, aborting!"
@@ -35,10 +36,10 @@ if [ "$XDG_SESSION_TYPE" = "x11" ]; then
     exit 1
   fi
 elif [ "$XDG_SESSION_TYPE" = "wayland" ]; then
-  VRR_ENABLED=$(kscreen-id.py --vrr | cut -d' ' -f2)
+  VRR_ENABLED=$("$KSID" --vrr | cut -d' ' -f2)
   if [ "$VRR_ENABLED" = "True" ] && [ "$CURRENT_PRIMARY" = "$WAYLAND_OUTPUT" ]; then
-    targetm1_mode=$(kscreen-id.py --mid "$WAYLAND_OUTPUT" 2560x1440@120)
-    targetm0_mode=$(kscreen-id.py --mid "$WAYLAND_OUTPUT" 2560x1440@144)
+    targetm1_mode=$("$KSID" --mid "$WAYLAND_OUTPUT" 2560x1440@120)
+    targetm0_mode=$("$KSID" --mid "$WAYLAND_OUTPUT" 2560x1440@144)
     "$KSD" output."$WAYLAND_OUTPUT".mode."$targetm1_mode" # switch to 120hz
     sleep 1
     "$KSD" output."$WAYLAND_OUTPUT".mode."$targetm0_mode" # switch back to 144hz

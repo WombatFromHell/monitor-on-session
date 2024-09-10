@@ -6,6 +6,7 @@ Requires=graphical-session.target
 
 [Service]
 Type=simple
+Environment="PATH=%h/.local/bin:/usr/bin:/usr/sbin:/bin:/sbin"
 ExecStart=%h/.local/bin/monitor-dbus-session-state.sh
 ExecStop=/usr/bin/pkill -9 -f monitor-dbus-session-state.sh
 RemainAfterExit=yes
