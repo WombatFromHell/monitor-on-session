@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
+
 # Path to the script to run when the signal is received
 SCRIPT_PATH="${1:-$HOME/.local/bin/on-session.sh}"
 LOG_FILE="/tmp/unlock_monitor.log"
 
 log() {
-  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >>"$LOG_FILE"
+  echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
 handle_signal() {
@@ -56,6 +57,7 @@ esac
 
 log "Starting screen lock monitor for $DE"
 
+prev_state=""
 dbus-monitor --session "type='signal',interface='$DBUS_INTERFACE'" |
   while read -r line; do
     if [[ "$line" == *"member=ActiveChanged"* ]]; then

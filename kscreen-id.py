@@ -32,12 +32,13 @@ def parse_modes(input):
     modes_list = input.strip().split("Modes: ")[1]
     for mode in modes_list.strip().split("  "):
         mode_chunks = strip_ansi(mode).split(":")
-        mode_id = mode_chunks[0].strip()
-        mode_res = mode_chunks[1].strip()
-        mode_active = False
-        if "*!" in mode_res:
-            mode_active = True
-        result.append((mode_id, mode_res.split("*!")[0], mode_active))
+        if len(mode_chunks) == 2:
+            mode_id = mode_chunks[0].strip()
+            mode_res = mode_chunks[1].strip()
+            mode_active = False
+            if "*!" in mode_res:
+                mode_active = True
+            result.append((mode_id, mode_res.split("*!")[0], mode_active))
     return result
 
 
