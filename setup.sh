@@ -12,14 +12,18 @@ if [ "$1" == "install" ]; then
   mkdir -p "$HOME"/.local/bin
   cp -f on-session-state.service "$HOME"/.config/systemd/user/
   cp -f ./*.sh ./*.py "$HOME"/.local/bin/
-  chmod 0755 "$HOME"/.local/bin/{monitor-dbus-session-state,fix-gsync,kscreen-id.py,openrgb-load,on-session}.sh
+  chmod 0755 \
+    "$HOME"/.local/bin/{monitor-dbus-session-state,fix-gsync,openrgb-load,on-session}.sh \
+    "$HOME"/.local/bin/kscreen-id.py
   systemctl --user daemon-reload &&
     systemctl --user enable --now on-session-state.service
   echo "Installed the on-session-state.service unit!"
 elif [ "$1" == "uninstall" ]; then
   systemctl --user disable --now on-session-state.service
   rm -f "$HOME"/.config/systemd/user/on-session-state.service
-  rm -f "$HOME"/.local/bin/{monitor-dbus-session-state,fix-gsync,kscreen-id.py,openrgb-load,on-session}.sh
+  rm -f \
+    "$HOME"/.local/bin/{monitor-dbus-session-state,fix-gsync,,openrgb-load,on-session}.sh \
+    "$HOME"/.local/bin/kscreen-id.py
   systemctl --user daemon-reload
   echo "Uninstalled the on-session-state.service unit!"
 else
